@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-source ci/scripts/lib.sh
+source scripts/lib.sh
 
 need_var DOMAIN_BASE
 need_var INGRESS_NS

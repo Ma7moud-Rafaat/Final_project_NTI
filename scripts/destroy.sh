@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-source ci/scripts/lib.sh
+source scripts/lib.sh
 
 need_var INGRESS_NS
 kube_setup
