@@ -45,6 +45,7 @@ read_outputs:
   when: manual
   allow_failure: false
   script:
+    - apk add --no-cache bash
     - bash scripts/read-outputs.sh
   artifacts:
     reports:
