@@ -1,0 +1,22 @@
+stages: [dispatch]
+
+default:
+  tags:
+    - local
+infra:
+  stage: dispatch
+  trigger:
+    include:
+      - local: "ci/.gitlab-infra.yml"
+    strategy: depend
+  rules:
+    - when: manual
+
+platform:
+  stage: dispatch
+  trigger:
+    include:
+      - local: "ci/.gitlab-platform.yml"
+    strategy: depend
+  rules:
+    - when: manual
