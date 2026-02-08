@@ -13,3 +13,6 @@ output "vpclink_id" {
 output "vpclink_sg_id" {
   value = aws_security_group.sg-vpclink.id
 }
+output "http_api_endpoint" {
+  value = aws_apigatewayv2_api.NTI_API.api_endpoint
+}

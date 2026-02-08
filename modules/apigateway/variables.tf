@@ -14,3 +14,7 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+variable "nlb_listener_arn" {
+  type        = string
+  description = "ARN of the NLB listener used by API Gateway private integration"
+}

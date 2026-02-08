@@ -71,13 +71,12 @@ bootstrap:
 deploy:
   stage: deploy
   extends: .k8s_tools
-  when: manual
-  allow_failure: false
   needs:
-    - job: bootstrap
+    - job: read_outputs
       artifacts: true
   script:
     - bash scripts/deploy-apps.sh
+
 
 # ---------------------------
 # 4) Ingress rules + TargetGroupBinding (manual)
