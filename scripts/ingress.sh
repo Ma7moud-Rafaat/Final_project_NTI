@@ -34,19 +34,22 @@ kind: Ingress
 metadata:
   name: argocd-ing
   namespace: argocd
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+    nginx.ingress.kubernetes.io/rewrite-target: "/$2"
 spec:
   ingressClassName: nginx
   rules:
   - host: argocd.${DOMAIN_BASE}
     http:
       paths:
-      - path: /
-        pathType: Prefix
+      - path: /argocd(/|$)(.*)
+        pathType: ImplementationSpecific
         backend:
           service:
             name: argocd-server
             port:
-              number: 80
+              number: 443
 EOF
 
 cat > /tmp/vault-ing.yaml <<EOF
@@ -55,14 +58,17 @@ kind: Ingress
 metadata:
   name: vault-ing
   namespace: vault
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    nginx.ingress.kubernetes.io/rewrite-target: "/$2"
 spec:
   ingressClassName: nginx
   rules:
   - host: vault.${DOMAIN_BASE}
     http:
       paths:
-      - path: /
-        pathType: Prefix
+      - path: /vault(/|$)(.*)
+        pathType: ImplementationSpecific
         backend:
           service:
             name: vault
@@ -76,14 +82,18 @@ kind: Ingress
 metadata:
   name: nexus-ing
   namespace: nexus
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    nginx.ingress.kubernetes.io/rewrite-target: "/$2"
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
 spec:
   ingressClassName: nginx
   rules:
   - host: nexus.${DOMAIN_BASE}
     http:
       paths:
-      - path: /
-        pathType: Prefix
+      - path: /nexus(/|$)(.*)
+        pathType: ImplementationSpecific
         backend:
           service:
             name: nexus-nexus-repository-manager

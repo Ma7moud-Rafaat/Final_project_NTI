@@ -75,6 +75,7 @@ deploy:
   needs:
     - job: read_outputs
       artifacts: true
+    - job: bootstrap
   script:
     - bash scripts/deploy-apps.sh
 
@@ -90,6 +91,7 @@ ingress:
   needs:
     - job: read_outputs
       artifacts: true
+    - job: deploy
   script:
     - bash scripts/ingress.sh
 
@@ -102,8 +104,9 @@ validate:
   when: manual
   allow_failure: false
   needs:
-    - job: ingress
+    - job: read_outputs
       artifacts: true
+    - job: ingress
   script:
     - bash scripts/validate.sh
 

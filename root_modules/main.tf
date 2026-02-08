@@ -37,6 +37,8 @@ module "apigateway" {
   api_name           = local.api_name
   private_subnet_ids = module.neywork.private_subnet_ids
   vpc_id             = module.neywork.vpc_id
+  nlb_listener_arn = module.nlb.listener_arn
+  domain_base = local.domain_base
 }
 
 module "nlb" {

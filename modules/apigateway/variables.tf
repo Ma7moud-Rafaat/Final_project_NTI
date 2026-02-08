@@ -18,3 +18,6 @@ variable "nlb_listener_arn" {
   type        = string
   description = "ARN of the NLB listener used by API Gateway private integration"
 }
+variable "domain_base" {
+  type = string
+}

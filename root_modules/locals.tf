@@ -48,6 +48,7 @@ locals {
 }
 locals {
   api_name = "NTI_API"
+  domain_base = "internal.local"
 }
 locals {
   lb_name          = "NTI-LB"

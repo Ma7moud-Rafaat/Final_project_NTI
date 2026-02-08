@@ -1,4 +1,4 @@
-resource "aws_security_group" "sg-vpclink" {
+resource "aws_security_group" "sg_vpclink" {
   name        = "${var.api_name}-apigw-vpclink-sg"
   description = "Security group for API Gateway VPC Link"
   vpc_id      = var.vpc_id
@@ -15,9 +15,9 @@ resource "aws_security_group" "sg-vpclink" {
   })
 }
 
-resource "aws_apigatewayv2_vpc_link" "VPC-LINK" {
+resource "aws_apigatewayv2_vpc_link" "VPC_LINK" {
   name               = "${var.api_name}-vpclink"
-  security_group_ids = [aws_security_group.sg-vpclink.id]
+  security_group_ids = [aws_security_group.sg_vpclink.id]
   subnet_ids         = var.private_subnet_ids
 
   tags = var.tags
