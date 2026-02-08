@@ -71,6 +71,7 @@ bootstrap:
 deploy:
   stage: deploy
   extends: .k8s_tools
+  when: manual
   needs:
     - job: read_outputs
       artifacts: true
@@ -87,7 +88,7 @@ ingress:
   when: manual
   allow_failure: false
   needs:
-    - job: deploy
+    - job: read_outputs
       artifacts: true
   script:
     - bash scripts/ingress.sh

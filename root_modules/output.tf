@@ -28,3 +28,6 @@ output "ingress_nlb_dns" {
 output "aws_lbc_role_arn" {
   value = module.EKS.aws_lbc_role_arn
 }
+output "http_api_endpoint" {
+value = module.apigateway.http_api_endpoint
+}
