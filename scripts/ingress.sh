@@ -60,28 +60,29 @@ metadata:
   namespace: argocd
   annotations:
     nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+    nginx.ingress.kubernetes.io/rewrite-target: "/\$2"
 spec:
   ingressClassName: nginx
   rules:
   - host: argocd.${DOMAIN_BASE}
     http:
       paths:
-      - path: /api
-        pathType: Prefix
+      - path: /api(/|$)(.*)
+        pathType: ImplementationSpecific
         backend:
           service:
             name: argocd-server
             port:
               number: 443
-      - path: /auth
-        pathType: Prefix
+      - path: /auth(/|$)(.*)
+        pathType: ImplementationSpecific
         backend:
           service:
             name: argocd-server
             port:
               number: 443
-      - path: /assets
-        pathType: Prefix
+      - path: /assets(/|$)(.*)
+        pathType: ImplementationSpecific
         backend:
           service:
             name: argocd-server
