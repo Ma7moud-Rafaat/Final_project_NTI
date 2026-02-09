@@ -65,6 +65,12 @@ resource "aws_apigatewayv2_route" "argocd_proxy" {
   target    = "integrations/${aws_apigatewayv2_integration.argocd.id}"
 }
 
+resource "aws_apigatewayv2_route" "argocd_root_slash" {
+  api_id    = aws_apigatewayv2_api.NTI_API.id
+  route_key = "ANY /argocd/"
+  target    = "integrations/${aws_apigatewayv2_integration.argocd.id}"
+}
+
 resource "aws_apigatewayv2_route" "argocd_root" {
   api_id    = aws_apigatewayv2_api.NTI_API.id
   route_key = "ANY /argocd"
@@ -73,42 +79,42 @@ resource "aws_apigatewayv2_route" "argocd_root" {
 
 # ArgoCD static + api + auth
 
-resource "aws_apigatewayv2_route" "argocd_assets_proxy" {
-  api_id    = aws_apigatewayv2_api.NTI_API.id
-  route_key = "ANY /assets/{proxy+}"
-  target    = "integrations/${aws_apigatewayv2_integration.argocd.id}"
-}
+# resource "aws_apigatewayv2_route" "argocd_assets_proxy" {
+#   api_id    = aws_apigatewayv2_api.NTI_API.id
+#   route_key = "ANY /assets/{proxy+}"
+#   target    = "integrations/${aws_apigatewayv2_integration.argocd.id}"
+# }
 
-resource "aws_apigatewayv2_route" "argocd_api_proxy" {
-  api_id    = aws_apigatewayv2_api.NTI_API.id
-  route_key = "ANY /api/{proxy+}"
-  target    = "integrations/${aws_apigatewayv2_integration.argocd.id}"
-}
+# resource "aws_apigatewayv2_route" "argocd_api_proxy" {
+#   api_id    = aws_apigatewayv2_api.NTI_API.id
+#   route_key = "ANY /api/{proxy+}"
+#   target    = "integrations/${aws_apigatewayv2_integration.argocd.id}"
+# }
 
-resource "aws_apigatewayv2_route" "argocd_auth_proxy" {
-  api_id    = aws_apigatewayv2_api.NTI_API.id
-  route_key = "ANY /auth/{proxy+}"
-  target    = "integrations/${aws_apigatewayv2_integration.argocd.id}"
-}
-# ArgoCD root paths (بدون proxy)
+# resource "aws_apigatewayv2_route" "argocd_auth_proxy" {
+#   api_id    = aws_apigatewayv2_api.NTI_API.id
+#   route_key = "ANY /auth/{proxy+}"
+#   target    = "integrations/${aws_apigatewayv2_integration.argocd.id}"
+# }
+# # ArgoCD root paths (بدون proxy)
 
-resource "aws_apigatewayv2_route" "argocd_api_root" {
-  api_id    = aws_apigatewayv2_api.NTI_API.id
-  route_key = "ANY /api"
-  target    = "integrations/${aws_apigatewayv2_integration.argocd.id}"
-}
+# resource "aws_apigatewayv2_route" "argocd_api_root" {
+#   api_id    = aws_apigatewayv2_api.NTI_API.id
+#   route_key = "ANY /api"
+#   target    = "integrations/${aws_apigatewayv2_integration.argocd.id}"
+# }
 
-resource "aws_apigatewayv2_route" "argocd_auth_root" {
-  api_id    = aws_apigatewayv2_api.NTI_API.id
-  route_key = "ANY /auth"
-  target    = "integrations/${aws_apigatewayv2_integration.argocd.id}"
-}
+# resource "aws_apigatewayv2_route" "argocd_auth_root" {
+#   api_id    = aws_apigatewayv2_api.NTI_API.id
+#   route_key = "ANY /auth"
+#   target    = "integrations/${aws_apigatewayv2_integration.argocd.id}"
+# }
 
-resource "aws_apigatewayv2_route" "argocd_assets_root" {
-  api_id    = aws_apigatewayv2_api.NTI_API.id
-  route_key = "ANY /assets"
-  target    = "integrations/${aws_apigatewayv2_integration.argocd.id}"
-}
+# resource "aws_apigatewayv2_route" "argocd_assets_root" {
+#   api_id    = aws_apigatewayv2_api.NTI_API.id
+#   route_key = "ANY /assets"
+#   target    = "integrations/${aws_apigatewayv2_integration.argocd.id}"
+# }
 
 
 resource "aws_apigatewayv2_route" "vault_root" {
