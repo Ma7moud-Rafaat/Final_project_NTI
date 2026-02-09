@@ -104,6 +104,12 @@ resource "aws_apigatewayv2_route" "argocd_auth_root" {
   target    = "integrations/${aws_apigatewayv2_integration.argocd.id}"
 }
 
+resource "aws_apigatewayv2_route" "argocd_assets_root" {
+  api_id    = aws_apigatewayv2_api.NTI_API.id
+  route_key = "ANY /assets"
+  target    = "integrations/${aws_apigatewayv2_integration.argocd.id}"
+}
+
 
 resource "aws_apigatewayv2_route" "vault_root" {
   api_id    = aws_apigatewayv2_api.NTI_API.id

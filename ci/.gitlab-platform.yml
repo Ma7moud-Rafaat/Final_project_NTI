@@ -93,7 +93,6 @@ ingress:
       artifacts: true
     - job: deploy
       optional: true
-
   script:
     - bash scripts/ingress.sh
 
