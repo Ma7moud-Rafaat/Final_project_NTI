@@ -1,6 +1,4 @@
-############################################
 # Integrations (3) -> same NLB listener, different Host header
-############################################
 
 resource "aws_apigatewayv2_integration" "argocd" {
   api_id = aws_apigatewayv2_api.NTI_API.id
@@ -59,9 +57,7 @@ resource "aws_apigatewayv2_integration" "nexus" {
 
 }
 
-############################################
 # Routes (paths)
-############################################
 
 resource "aws_apigatewayv2_route" "argocd_proxy" {
   api_id    = aws_apigatewayv2_api.NTI_API.id
@@ -75,17 +71,76 @@ resource "aws_apigatewayv2_route" "argocd_root" {
   target    = "integrations/${aws_apigatewayv2_integration.argocd.id}"
 }
 
-resource "aws_apigatewayv2_route" "vault_proxy" {
+# ArgoCD static + api + auth
+
+resource "aws_apigatewayv2_route" "argocd_assets_proxy" {
   api_id    = aws_apigatewayv2_api.NTI_API.id
-  route_key = "ANY /vault/{proxy+}"
-  target    = "integrations/${aws_apigatewayv2_integration.vault.id}"
+  route_key = "ANY /assets/{proxy+}"
+  target    = "integrations/${aws_apigatewayv2_integration.argocd.id}"
 }
+
+resource "aws_apigatewayv2_route" "argocd_api_proxy" {
+  api_id    = aws_apigatewayv2_api.NTI_API.id
+  route_key = "ANY /api/{proxy+}"
+  target    = "integrations/${aws_apigatewayv2_integration.argocd.id}"
+}
+
+resource "aws_apigatewayv2_route" "argocd_auth_proxy" {
+  api_id    = aws_apigatewayv2_api.NTI_API.id
+  route_key = "ANY /auth/{proxy+}"
+  target    = "integrations/${aws_apigatewayv2_integration.argocd.id}"
+}
+# ArgoCD root paths (بدون proxy)
+
+resource "aws_apigatewayv2_route" "argocd_api_root" {
+  api_id    = aws_apigatewayv2_api.NTI_API.id
+  route_key = "ANY /api"
+  target    = "integrations/${aws_apigatewayv2_integration.argocd.id}"
+}
+
+resource "aws_apigatewayv2_route" "argocd_auth_root" {
+  api_id    = aws_apigatewayv2_api.NTI_API.id
+  route_key = "ANY /auth"
+  target    = "integrations/${aws_apigatewayv2_integration.argocd.id}"
+}
+
 
 resource "aws_apigatewayv2_route" "vault_root" {
   api_id    = aws_apigatewayv2_api.NTI_API.id
   route_key = "ANY /vault"
   target    = "integrations/${aws_apigatewayv2_integration.vault.id}"
 }
+resource "aws_apigatewayv2_route" "vault_proxy" {
+  api_id    = aws_apigatewayv2_api.NTI_API.id
+  route_key = "ANY /vault/{proxy+}"
+  target    = "integrations/${aws_apigatewayv2_integration.vault.id}"
+}
+# Vault redirects to /ui/*
+resource "aws_apigatewayv2_route" "vault_ui_root" {
+  api_id    = aws_apigatewayv2_api.NTI_API.id
+  route_key = "ANY /ui"
+  target    = "integrations/${aws_apigatewayv2_integration.vault.id}"
+}
+
+resource "aws_apigatewayv2_route" "vault_ui_proxy" {
+  api_id    = aws_apigatewayv2_api.NTI_API.id
+  route_key = "ANY /ui/{proxy+}"
+  target    = "integrations/${aws_apigatewayv2_integration.vault.id}"
+}
+
+# Vault UI calls /v1/*
+resource "aws_apigatewayv2_route" "vault_v1_root" {
+  api_id    = aws_apigatewayv2_api.NTI_API.id
+  route_key = "ANY /v1"
+  target    = "integrations/${aws_apigatewayv2_integration.vault.id}"
+}
+
+resource "aws_apigatewayv2_route" "vault_v1_proxy" {
+  api_id    = aws_apigatewayv2_api.NTI_API.id
+  route_key = "ANY /v1/{proxy+}"
+  target    = "integrations/${aws_apigatewayv2_integration.vault.id}"
+}
+
 
 resource "aws_apigatewayv2_route" "nexus_proxy" {
   api_id    = aws_apigatewayv2_api.NTI_API.id
@@ -99,9 +154,8 @@ resource "aws_apigatewayv2_route" "nexus_root" {
   target    = "integrations/${aws_apigatewayv2_integration.nexus.id}"
 }
 
-############################################
 # Default stage
-############################################
+
 resource "aws_apigatewayv2_stage" "default" {
   api_id      = aws_apigatewayv2_api.NTI_API.id
   name        = "$default"
