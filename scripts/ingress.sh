@@ -149,7 +149,6 @@ spec:
 EOF
 
 kubectl apply -f /tmp/argocd-ing.yaml
-kubectl apply -f /tmp/argocd-rootpaths-ing.yaml
 kubectl apply -f /tmp/vault-ing.yaml
 kubectl apply -f /tmp/vault-ui-ing.yaml
 kubectl apply -f /tmp/vault-v1-ing.yaml
