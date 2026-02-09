@@ -65,11 +65,11 @@ resource "aws_apigatewayv2_route" "argocd_proxy" {
   target    = "integrations/${aws_apigatewayv2_integration.argocd.id}"
 }
 
-resource "aws_apigatewayv2_route" "argocd_root_slash" {
-  api_id    = aws_apigatewayv2_api.NTI_API.id
-  route_key = "ANY /argocd/"
-  target    = "integrations/${aws_apigatewayv2_integration.argocd.id}"
-}
+# resource "aws_apigatewayv2_route" "argocd_root_slash" {
+#   api_id    = aws_apigatewayv2_api.NTI_API.id
+#   route_key = "ANY /argocd/"
+#   target    = "integrations/${aws_apigatewayv2_integration.argocd.id}"
+# }
 
 resource "aws_apigatewayv2_route" "argocd_root" {
   api_id    = aws_apigatewayv2_api.NTI_API.id
