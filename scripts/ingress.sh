@@ -36,7 +36,7 @@ metadata:
   namespace: argocd
   annotations:
     nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
-    nginx.ingress.kubernetes.io/rewrite-target: "/$2"
+    nginx.ingress.kubernetes.io/rewrite-target: "/\$2"
 spec:
   ingressClassName: nginx
   rules:
@@ -60,7 +60,7 @@ metadata:
   namespace: vault
   annotations:
     nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
-    nginx.ingress.kubernetes.io/rewrite-target: "/$2"
+    nginx.ingress.kubernetes.io/rewrite-target: "/\$2"
 spec:
   ingressClassName: nginx
   rules:
@@ -84,7 +84,7 @@ metadata:
   namespace: nexus
   annotations:
     nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
-    nginx.ingress.kubernetes.io/rewrite-target: "/$2"
+    nginx.ingress.kubernetes.io/rewrite-target: "/\$2"
     nginx.ingress.kubernetes.io/proxy-body-size: "0"
 spec:
   ingressClassName: nginx
