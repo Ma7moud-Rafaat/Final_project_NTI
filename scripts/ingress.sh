@@ -52,6 +52,43 @@ spec:
               number: 443
 EOF
 
+cat > /tmp/argocd-rootpaths-ing.yaml <<EOF
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: argocd-rootpaths-ing
+  namespace: argocd
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: argocd.${DOMAIN_BASE}
+    http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: argocd-server
+            port:
+              number: 443
+      - path: /auth
+        pathType: Prefix
+        backend:
+          service:
+            name: argocd-server
+            port:
+              number: 443
+      - path: /assets
+        pathType: Prefix
+        backend:
+          service:
+            name: argocd-server
+            port:
+              number: 443
+EOF
+
 cat > /tmp/vault-ing.yaml <<EOF
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -68,6 +105,54 @@ spec:
     http:
       paths:
       - path: /vault(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: vault
+            port:
+              number: 8200
+EOF
+
+cat > /tmp/vault-ui-ing.yaml <<EOF
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: vault-ui-ing
+  namespace: vault
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    nginx.ingress.kubernetes.io/rewrite-target: "/ui/\$2"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: vault.${DOMAIN_BASE}
+    http:
+      paths:
+      - path: /ui(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: vault
+            port:
+              number: 8200
+EOF
+
+cat > /tmp/vault-v1-ing.yaml <<EOF
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: vault-v1-ing
+  namespace: vault
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    nginx.ingress.kubernetes.io/rewrite-target: "/v1/\$2"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: vault.${DOMAIN_BASE}
+    http:
+      paths:
+      - path: /v1(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
@@ -102,7 +187,10 @@ spec:
 EOF
 
 kubectl apply -f /tmp/argocd-ing.yaml
+kubectl apply -f /tmp/argocd-rootpaths-ing.yaml
 kubectl apply -f /tmp/vault-ing.yaml
+kubectl apply -f /tmp/vault-ui-ing.yaml
+kubectl apply -f /tmp/vault-v1-ing.yaml
 kubectl apply -f /tmp/nexus-ing.yaml
 
 kubectl get ingress -A -o wide

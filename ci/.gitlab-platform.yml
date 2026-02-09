@@ -92,6 +92,8 @@ ingress:
     - job: read_outputs
       artifacts: true
     - job: deploy
+      optional: true
+
   script:
     - bash scripts/ingress.sh
 
