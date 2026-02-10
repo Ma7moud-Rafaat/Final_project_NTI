@@ -148,10 +148,43 @@ spec:
               number: 8081
 EOF
 
+cat > /tmp/nexus-registry-ing.yaml <<EOF
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nexus-registry-ing
+  namespace: nexus
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    nginx.ingress.kubernetes.io/proxy-request-buffering: "off"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: registry.${DOMAIN_BASE}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nexus-nexus-repository-manager
+            port:
+              number: 5000
+EOF
+
+kubectl apply -f /tmp/nexus-registry-ing.yaml
 kubectl apply -f /tmp/argocd-ing.yaml
+kubectl -n argocd patch configmap argocd-cmd-params-cm --type merge -p '{"data":{"server.basehref":"/argocd","server.rootpath":"/argocd"}}'
+kubectl -n argocd rollout restart deployment argocd-server
+kubectl -n argocd rollout status deployment argocd-server --timeout=180s
 kubectl apply -f /tmp/vault-ing.yaml
 kubectl apply -f /tmp/vault-ui-ing.yaml
 kubectl apply -f /tmp/vault-v1-ing.yaml
 kubectl apply -f /tmp/nexus-ing.yaml
+kubectl apply -f /tmp/nexus-registry-ing.yaml
+kubectl -n nexus patch svc nexus-nexus-repository-manager --type='json' -p='[
+  {"op":"add","path":"/spec/ports/-","value":{"name":"docker","port":5000,"targetPort":5000,"protocol":"TCP"}}
+]'
+
 
 kubectl get ingress -A -o wide

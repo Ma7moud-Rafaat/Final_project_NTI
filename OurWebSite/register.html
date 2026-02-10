@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="register.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <title>Registration</title>
+</head>
+
+<body>
+    <header>
+        <h2>
+            <a href="Home.html" class="logo">GitHack</a>
+        </h2>
+        <ul>
+            <li><a href="Home.html">Home</a></li>
+            <li><a href="our.html">Our Developers</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="Login.html">Login</a></li>
+            <li><a href="register.html">Register</a></li>
+        </ul>
+    </header>
+    <div class="container">
+        <div class="box">
+            <h1>Registration</h1>
+            <form >
+                <div>
+                    <i class="fa-solid fa-user"></i>
+                    <input type="text" placeholder="Enter Your Name" name="name">
+                </div>
+                <div>
+                    <i class="fa-solid fa-envelope"></i>
+                    <input type="email" required placeholder="Enter Your Email" name="email">
+                </div>
+                <div>
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" required placeholder="Enter Your Password" name="password">
+                </div>
+                <div>
+                    <i class="fa-solid fa-phone"></i>
+                    <input type="tel" placeholder="Enter Your Phone" name="phone">
+                </div>
+                <div>
+                    <i class="fa-solid fa-calendar"></i>
+                    <input type="date" name="birthdate">
+                </div>
+                <input type="submit" value="Register">
+            </form>
+            <span>
+                Already have an account?
+                <a href="#">Login</a>
+            </span>
+        </div>
+    </div>
+</body>
+
+</html>

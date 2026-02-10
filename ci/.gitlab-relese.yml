@@ -1,0 +1,46 @@
+stages:
+  - build
+  - push
+
+variables:
+  DOCKERFILE_PATH: "Dockerfile"
+  DOCKER_CONTEXT: "."
+  FULL_IMAGE_NAME: "${NEXUS_REGISTRY}/${NEXUS_REPOSITORY}/${IMAGE_NAME}"
+
+default:
+  image: docker:27
+  services:
+    - name: docker:27-dind
+  variables:
+    DOCKER_TLS_CERTDIR: ""
+  before_script:
+    - docker version
+
+build_image:
+  stage: build
+  script:
+    - echo "Building ${FULL_IMAGE_NAME}:${CI_COMMIT_SHORT_SHA}"
+    - docker build -f "${DOCKERFILE_PATH}" -t "${FULL_IMAGE_NAME}:${CI_COMMIT_SHORT_SHA}" "${DOCKER_CONTEXT}"
+    - docker save "${FULL_IMAGE_NAME}:${CI_COMMIT_SHORT_SHA}" -o image.tar
+  artifacts:
+    paths:
+      - image.tar
+    expire_in: 1 day
+  rules:
+    - if: $CI_COMMIT_BRANCH
+
+push_to_nexus:
+  stage: push
+  dependencies:
+    - build_image
+  script:
+    - echo "${NEXUS_PASSWORD}" | docker login "${NEXUS_REGISTRY}" -u "${NEXUS_USERNAME}" --password-stdin
+    - docker load -i image.tar
+    - docker push "${FULL_IMAGE_NAME}:${CI_COMMIT_SHORT_SHA}"
+    - |
+      if [ "${CI_COMMIT_BRANCH}" = "main" ]; then
+        docker tag "${FULL_IMAGE_NAME}:${CI_COMMIT_SHORT_SHA}" "${FULL_IMAGE_NAME}:latest"
+        docker push "${FULL_IMAGE_NAME}:latest"
+      fi
+  rules:
+    - if: $CI_COMMIT_BRANCH

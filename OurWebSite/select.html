@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Selection Form</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h2>
+            <a href="Home.html" class="logo">GitHack</a>
+        </h2>
+        <ul>
+            <li><a href="Home.html">Home</a></li>
+            <li><a href="our.html">Our Developers</a></li>
+            <li><a href="about.html">About</a></li>
+        </ul>
+    </header>
+        <h1>GITHACK</h1>
+    <div class="container">
+        <h2>Select a Programmer:</h2>
+        <form >
+            <label><input type="radio" class="radio" name="team" value="refoo">   Mahmoud Rafaat </label>
+            <label><input type="radio" class="radio" name="team" value="Ezz"> Khaled Ahmed </label>
+            <label><input type="radio" class="radio" name="team" value="kemoo">   Kareem hamdy</label>
+            <label><input type="radio" class="radio" name="team" value="muhamed">   muhmed ayman </label>
+            <label><input type="radio" class="radio" name="team" value="khokha">  kholoud abdelmougoud </label>
+            <label><input type="radio" class="radio" name="team" value="emyyy">   Eman Abdo</label> <br>
+            <label for="project-topic">Project Topic:</label>
+            <input type="text" id="project-topic" name="topic">
+            <label for="comments">About the Project:</label>
+            <textarea id="comments" name="details"></textarea>
+            <div class="btns-container">
+                <input type="submit" id="submit" class="btns" value="Send" onclick="alert('Your project has been send')">
+                <input type="button" id="back" class="btns" value="Back" onclick="">
+            </div>
+        </form>
+    </div>
+</body>
+</html>
