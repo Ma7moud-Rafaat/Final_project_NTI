@@ -182,9 +182,9 @@ kubectl apply -f /tmp/vault-ui-ing.yaml
 kubectl apply -f /tmp/vault-v1-ing.yaml
 kubectl apply -f /tmp/nexus-ing.yaml
 kubectl apply -f /tmp/nexus-registry-ing.yaml
-kubectl -n nexus patch svc nexus-nexus-repository-manager --type='json' -p='[
-  {"op":"add","path":"/spec/ports/-","value":{"name":"docker","port":5000,"targetPort":5000,"protocol":"TCP"}}
-]'
+# kubectl -n nexus patch svc nexus-nexus-repository-manager --type='json' -p='[
+#   {"op":"add","path":"/spec/ports/-","value":{"name":"docker","port":5000,"targetPort":5000,"protocol":"TCP"}}
+# ]'
 
 
 kubectl get ingress -A -o wide
