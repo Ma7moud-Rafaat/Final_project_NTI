@@ -10,6 +10,8 @@ variables:
 
 default:
   image: docker:27
+  tags:
+    - local
   services:
     - name: docker:27-dind
 
@@ -33,15 +35,34 @@ push_image:
     - apk add --no-cache curl jq
   script:
     - docker load -i image.tar
-    # Debug Vault connectivity
-    - echo "VAULT_ADDR=$VAULT_ADDR"
-    - curl -vk "$VAULT_ADDR/v1/sys/health" -o /dev/null -w "\nhealth_http=%{http_code}\n" || true
-    - curl -vk -X POST "$VAULT_ADDR/v1/auth/approle/login" -d '{"role_id":"test","secret_id":"test"}' -o /dev/null -w "\nlogin_http=%{http_code}\n" || true
-
-    # Vault AppRole login -> VAULT_TOKEN (real)
+    # Vault AppRole login -> VAULT_TOKEN
     - >
       VAULT_TOKEN=$(curl -s --request POST
       --data "{\"role_id\":\"$VAULT_ROLE_ID\",\"secret_id\":\"$VAULT_SECRET_ID\"}"
       "$VAULT_ADDR/v1/auth/approle/login" | jq -r .auth.client_token)
 
-    - echo "VAULT_TOKEN_EMPTY?=$( [ -z "$VAULT_TOKEN" ] && echo yes || echo no )"
+    # Read DockerHub creds from Vault (KV v2 mount = kv)
+    - >
+      DOCKERHUB_USERNAME=$(curl -s -H "X-Vault-Token: $VAULT_TOKEN"
+      "$VAULT_ADDR/v1/kv/data/dockerhub" | jq -r .data.data.username)
+
+    - >
+      DOCKERHUB_TOKEN=$(curl -s -H "X-Vault-Token: $VAULT_TOKEN"
+      "$VAULT_ADDR/v1/kv/data/dockerhub" | jq -r .data.data.token)
+
+    # Docker login
+    - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+
+    # Tag + Push
+    - FULL_IMAGE="${DOCKERHUB_USERNAME}/${IMAGE_NAME}"
+    - docker tag "$IMAGE_NAME:$CI_COMMIT_SHORT_SHA" "$FULL_IMAGE:$CI_COMMIT_SHORT_SHA"
+    - docker push "$FULL_IMAGE:$CI_COMMIT_SHORT_SHA"
+
+    # latest on main
+    - |
+      if [ "$CI_COMMIT_BRANCH" = "main" ]; then
+        docker tag "$IMAGE_NAME:$CI_COMMIT_SHORT_SHA" "$FULL_IMAGE:latest"
+        docker push "$FULL_IMAGE:latest"
+      fi
+  rules:
+    - if: '$CI_COMMIT_BRANCH'
