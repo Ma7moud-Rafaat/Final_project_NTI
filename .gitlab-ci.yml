@@ -20,6 +20,7 @@ platform:
     strategy: depend
   rules:
     - when: manual
+
 Release:
   stage: dispatch
   trigger:

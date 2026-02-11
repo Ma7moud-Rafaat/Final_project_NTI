@@ -6,17 +6,13 @@ variables:
   IMAGE_NAME: "ourwebsite"
   DOCKERFILE_PATH: "Dockerfile"
   DOCKER_CONTEXT: "."
+  DOCKER_TLS_CERTDIR: ""
 
 default:
   image: docker:27
   services:
     - name: docker:27-dind
-  variables:
-    DOCKER_TLS_CERTDIR: ""
 
-# ------------------------
-# 1) Build Image
-# ------------------------
 build_image:
   stage: build
   script:
@@ -29,9 +25,6 @@ build_image:
   rules:
     - if: $CI_COMMIT_BRANCH
 
-# ------------------------
-# 2) Push Image to DockerHub using Vault
-# ------------------------
 push_image:
   stage: push
   dependencies:
@@ -41,25 +34,20 @@ push_image:
   script:
     - docker load -i image.tar
 
-    # Login to Vault (AppRole)
     - |
       VAULT_TOKEN="$(curl -s --request POST \
         --data "{\"role_id\":\"$VAULT_ROLE_ID\",\"secret_id\":\"$VAULT_SECRET_ID\"}" \
         "$VAULT_ADDR/v1/auth/approle/login" | jq -r .auth.client_token)"
 
-    # Read DockerHub credentials from Vault KV
     - DOCKERHUB_USERNAME="$(curl -s -H "X-Vault-Token: $VAULT_TOKEN" "$VAULT_ADDR/v1/kv/data/dockerhub" | jq -r .data.data.username)"
     - DOCKERHUB_TOKEN="$(curl -s -H "X-Vault-Token: $VAULT_TOKEN" "$VAULT_ADDR/v1/kv/data/dockerhub" | jq -r .data.data.token)"
 
-    # Docker login
     - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
 
-    # Tag + Push
     - FULL_IMAGE="${DOCKERHUB_USERNAME}/${IMAGE_NAME}"
     - docker tag "$IMAGE_NAME:$CI_COMMIT_SHORT_SHA" "$FULL_IMAGE:$CI_COMMIT_SHORT_SHA"
     - docker push "$FULL_IMAGE:$CI_COMMIT_SHORT_SHA"
 
-    # latest tag only on main
     - |
       if [ "$CI_COMMIT_BRANCH" = "main" ]; then
         docker tag "$IMAGE_NAME:$CI_COMMIT_SHORT_SHA" "$FULL_IMAGE:latest"
