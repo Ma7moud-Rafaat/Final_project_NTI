@@ -1,48 +1,36 @@
-stages:
-  - build
-  - push
+stages: [build_push]
 
 variables:
-  IMAGE_NAME: "ourwebsite"          # لازم lowercase
+  IMAGE_NAME: "ourwebsite"
   DOCKERFILE_PATH: "Dockerfile"
   DOCKER_CONTEXT: "."
   DOCKER_HOST: "unix:///var/run/docker.sock"
-  DOCKER_TLS_CERTDIR: ""            # مهم مع docker images أحيانًا
+  DOCKER_TLS_CERTDIR: ""
 
 default:
   tags: [local]
   image: docker:27
 
-build_image:
-  stage: build
-  script:
-    - docker info
-    - docker build -f "$DOCKERFILE_PATH" -t "$IMAGE_NAME:$CI_COMMIT_SHORT_SHA" "$DOCKER_CONTEXT"
-    - docker save "$IMAGE_NAME:$CI_COMMIT_SHORT_SHA" -o image.tar
-  artifacts:
-    paths: [image.tar]
-    expire_in: 1 day
-
-push_image:
-  stage: push
-  dependencies: [build_image]
+build_push_image:
+  stage: build_push
   before_script:
     - apk add --no-cache curl jq
   script:
-    - docker load -i image.tar
+    - docker info
+    - docker build -f "$DOCKERFILE_PATH" -t "$IMAGE_NAME:$CI_COMMIT_SHORT_SHA" "$DOCKER_CONTEXT"
 
     - |
       VAULT_TOKEN="$(curl -s --request POST \
-        --data "{\"role_id\":\"$VAULT_ROLE_ID\",\"secret_id\":\"$VAULT_SECRET_ID\"}" \
-        "$VAULT_ADDR/v1/auth/approle/login" | jq -r .auth.client_token)"
+      --data "{\"role_id\":\"$VAULT_ROLE_ID\",\"secret_id\":\"$VAULT_SECRET_ID\"}" \
+      "$VAULT_ADDR/v1/auth/approle/login" | jq -r .auth.client_token)"
 
     - |
       DOCKERHUB_USERNAME="$(curl -s -H "X-Vault-Token: $VAULT_TOKEN" \
-        "$VAULT_ADDR/v1/kv/data/dockerhub" | jq -r .data.data.username)"
+      "$VAULT_ADDR/v1/kv/data/dockerhub" | jq -r .data.data.username)"
 
     - |
       DOCKERHUB_TOKEN="$(curl -s -H "X-Vault-Token: $VAULT_TOKEN" \
-        "$VAULT_ADDR/v1/kv/data/dockerhub" | jq -r .data.data.token)"
+      "$VAULT_ADDR/v1/kv/data/dockerhub" | jq -r .data.data.token)"
 
     - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
 
