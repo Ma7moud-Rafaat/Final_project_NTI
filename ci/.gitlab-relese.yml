@@ -31,30 +31,46 @@ build_image:
 
 push_image:
   stage: push
-  dependencies:
-    - build_image
   when: manual
+  dependencies: [build_image]
   before_script:
     - apk add --no-cache curl jq
   script:
+    - set -euo pipefail
+    - docker version
     - docker load -i image.tar
-    - echo "TOKEN_PREFIX=$(echo "$DOCKERHUB_TOKEN" | cut -c1-9)"
-    - curl -s -H "X-Vault-Token: $VAULT_TOKEN" "$VAULT_ADDR/v1/kv/data/dockerhub" | jq
+
+    # sanity: vault reachable
+    - echo "VAULT_ADDR=[$VAULT_ADDR]"
+    - curl -sS --fail -o /dev/null -w "health_http=%{http_code}\n" "$VAULT_ADDR/v1/sys/health"
 
     # Vault AppRole login -> VAULT_TOKEN
-    - >
-      VAULT_TOKEN=$(curl -s --request POST
-      --data "{\"role_id\":\"$VAULT_ROLE_ID\",\"secret_id\":\"$VAULT_SECRET_ID\"}"
-      "$VAULT_ADDR/v1/auth/approle/login" | jq -r .auth.client_token)
+    - |
+      LOGIN_JSON="$(curl -sS --fail --request POST \
+        --data "{\"role_id\":\"$VAULT_ROLE_ID\",\"secret_id\":\"$VAULT_SECRET_ID\"}" \
+        "$VAULT_ADDR/v1/auth/approle/login")"
 
-    # Read dockerhub creds from KV (mount=kv)
-    - >
-      DOCKERHUB_USERNAME=$(curl -s -H "X-Vault-Token: $VAULT_TOKEN"
-      "$VAULT_ADDR/v1/kv/data/dockerhub" | jq -r .data.data.username)
+      echo "$LOGIN_JSON" | jq -r '{lease: .auth.lease_duration, token_present: (.auth.client_token != null)}'
 
-    - >
-      DOCKERHUB_TOKEN=$(curl -s -H "X-Vault-Token: $VAULT_TOKEN"
-      "$VAULT_ADDR/v1/kv/data/dockerhub" | jq -r .data.data.token)
+      VAULT_TOKEN="$(echo "$LOGIN_JSON" | jq -r .auth.client_token)"
+      test -n "$VAULT_TOKEN" && [ "$VAULT_TOKEN" != "null" ]
+
+    # Read dockerhub creds from KV v2
+    - |
+      CREDS_JSON="$(curl -sS --fail -H "X-Vault-Token: $VAULT_TOKEN" \
+        "$VAULT_ADDR/v1/kv/data/dockerhub")"
+
+      echo "$CREDS_JSON" | jq -r '{version: .data.metadata.version, keys: (.data.data|keys)}'
+
+      DOCKERHUB_USERNAME="$(echo "$CREDS_JSON" | jq -r .data.data.username)"
+      DOCKERHUB_TOKEN="$(echo "$CREDS_JSON" | jq -r .data.data.token)"
+
+      echo "USER=$DOCKERHUB_USERNAME"
+      echo "TOKEN_LEN=${#DOCKERHUB_TOKEN}"
+      echo "TOKEN_PREFIX=$(echo "$DOCKERHUB_TOKEN" | cut -c1-9)"
+
+      test -n "$DOCKERHUB_USERNAME" && [ "$DOCKERHUB_USERNAME" != "null" ]
+      test -n "$DOCKERHUB_TOKEN" && [ "$DOCKERHUB_TOKEN" != "null" ]
 
     - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
 
