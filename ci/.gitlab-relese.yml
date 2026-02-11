@@ -6,44 +6,35 @@ variables:
   IMAGE_NAME: "ourwebsite"
   DOCKERFILE_PATH: "Dockerfile"
   DOCKER_CONTEXT: "."
-  DOCKER_TLS_CERTDIR: ""
-
 
 default:
   tags:
     - local
   image: docker:27
-  services:
-    - name: docker:27
-      alias: docker
 
 build_image:
   stage: build
   script:
+    - docker info
     - docker build -f "$DOCKERFILE_PATH" -t "$IMAGE_NAME:$CI_COMMIT_SHORT_SHA" "$DOCKER_CONTEXT"
     - docker save "$IMAGE_NAME:$CI_COMMIT_SHORT_SHA" -o image.tar
   artifacts:
-    paths:
-      - image.tar
+    paths: [image.tar]
     expire_in: 1 day
-  rules:
-    - if: '$CI_COMMIT_BRANCH'
 
 push_image:
   stage: push
-  dependencies:
-    - build_image
+  dependencies: [build_image]
   before_script:
     - apk add --no-cache curl jq
   script:
     - docker load -i image.tar
-    # Vault AppRole login -> VAULT_TOKEN
+
     - >
       VAULT_TOKEN=$(curl -s --request POST
       --data "{\"role_id\":\"$VAULT_ROLE_ID\",\"secret_id\":\"$VAULT_SECRET_ID\"}"
       "$VAULT_ADDR/v1/auth/approle/login" | jq -r .auth.client_token)
 
-    # Read DockerHub creds from Vault (KV v2 mount = kv)
     - >
       DOCKERHUB_USERNAME=$(curl -s -H "X-Vault-Token: $VAULT_TOKEN"
       "$VAULT_ADDR/v1/kv/data/dockerhub" | jq -r .data.data.username)
@@ -52,19 +43,14 @@ push_image:
       DOCKERHUB_TOKEN=$(curl -s -H "X-Vault-Token: $VAULT_TOKEN"
       "$VAULT_ADDR/v1/kv/data/dockerhub" | jq -r .data.data.token)
 
-    # Docker login
     - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
 
-    # Tag + Push
     - FULL_IMAGE="${DOCKERHUB_USERNAME}/${IMAGE_NAME}"
     - docker tag "$IMAGE_NAME:$CI_COMMIT_SHORT_SHA" "$FULL_IMAGE:$CI_COMMIT_SHORT_SHA"
     - docker push "$FULL_IMAGE:$CI_COMMIT_SHORT_SHA"
 
-    # latest on main
     - |
       if [ "$CI_COMMIT_BRANCH" = "main" ]; then
         docker tag "$IMAGE_NAME:$CI_COMMIT_SHORT_SHA" "$FULL_IMAGE:latest"
         docker push "$FULL_IMAGE:latest"
       fi
-  rules:
-    - if: '$CI_COMMIT_BRANCH'
