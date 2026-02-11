@@ -23,7 +23,7 @@ build_image:
       - image.tar
     expire_in: 1 day
   rules:
-    - if: $CI_COMMIT_BRANCH
+    - if: '$CI_COMMIT_BRANCH'
 
 push_image:
   stage: push
@@ -34,13 +34,20 @@ push_image:
   script:
     - docker load -i image.tar
 
-    - |
-      VAULT_TOKEN="$(curl -s --request POST \
-        --data "{\"role_id\":\"$VAULT_ROLE_ID\",\"secret_id\":\"$VAULT_SECRET_ID\"}" \
-        "$VAULT_ADDR/v1/auth/approle/login" | jq -r .auth.client_token)"
+    # Vault AppRole login -> VAULT_TOKEN
+    - >
+      VAULT_TOKEN=$(curl -s --request POST
+      --data "{\"role_id\":\"$VAULT_ROLE_ID\",\"secret_id\":\"$VAULT_SECRET_ID\"}"
+      "$VAULT_ADDR/v1/auth/approle/login" | jq -r .auth.client_token)
 
-    - DOCKERHUB_USERNAME="$(curl -s -H "X-Vault-Token: $VAULT_TOKEN" "$VAULT_ADDR/v1/kv/data/dockerhub" | jq -r .data.data.username)"
-    - DOCKERHUB_TOKEN="$(curl -s -H "X-Vault-Token: $VAULT_TOKEN" "$VAULT_ADDR/v1/kv/data/dockerhub" | jq -r .data.data.token)"
+    # Read dockerhub creds from KV (mount=kv)
+    - >
+      DOCKERHUB_USERNAME=$(curl -s -H "X-Vault-Token: $VAULT_TOKEN"
+      "$VAULT_ADDR/v1/kv/data/dockerhub" | jq -r .data.data.username)
+
+    - >
+      DOCKERHUB_TOKEN=$(curl -s -H "X-Vault-Token: $VAULT_TOKEN"
+      "$VAULT_ADDR/v1/kv/data/dockerhub" | jq -r .data.data.token)
 
     - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
 
@@ -54,4 +61,4 @@ push_image:
         docker push "$FULL_IMAGE:latest"
       fi
   rules:
-    - if: $CI_COMMIT_BRANCH
+    - if: '$CI_COMMIT_BRANCH'
