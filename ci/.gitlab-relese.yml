@@ -9,9 +9,9 @@ variables:
   DOCKER_TLS_CERTDIR: ""
 
 default:
-  image: docker:27
   tags:
     - local
+  image: docker:27
   services:
     - name: docker:27-dind
 
