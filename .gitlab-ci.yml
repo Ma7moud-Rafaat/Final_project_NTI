@@ -20,3 +20,11 @@ platform:
     strategy: depend
   rules:
     - when: manual
+Release:
+  stage: dispatch
+  trigger:
+    include:
+      - local: "ci/.gitlab-relese.yml"
+    strategy: depend
+  rules:
+    - when: manual
