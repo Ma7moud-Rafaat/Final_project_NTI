@@ -35,7 +35,8 @@ push_image:
     - apk add --no-cache curl jq
   script:
     - docker load -i image.tar
-
+    - echo "TOKEN_PREFIX=$(echo "$DOCKERHUB_TOKEN" | cut -c1-9)"
+    
     # Vault AppRole login -> VAULT_TOKEN
     - >
       VAULT_TOKEN=$(curl -s --request POST
