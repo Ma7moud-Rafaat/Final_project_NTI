@@ -3,13 +3,14 @@ stages:
   - push
 
 variables:
-  IMAGE_NAME: "ourwebsite"
+  IMAGE_NAME: "ourwebsite"          # لازم lowercase
   DOCKERFILE_PATH: "Dockerfile"
   DOCKER_CONTEXT: "."
+  DOCKER_HOST: "unix:///var/run/docker.sock"
+  DOCKER_TLS_CERTDIR: ""            # مهم مع docker images أحيانًا
 
 default:
-  tags:
-    - local
+  tags: [local]
   image: docker:27
 
 build_image:
@@ -30,18 +31,18 @@ push_image:
   script:
     - docker load -i image.tar
 
-    - >
-      VAULT_TOKEN=$(curl -s --request POST
-      --data "{\"role_id\":\"$VAULT_ROLE_ID\",\"secret_id\":\"$VAULT_SECRET_ID\"}"
-      "$VAULT_ADDR/v1/auth/approle/login" | jq -r .auth.client_token)
+    - |
+      VAULT_TOKEN="$(curl -s --request POST \
+        --data "{\"role_id\":\"$VAULT_ROLE_ID\",\"secret_id\":\"$VAULT_SECRET_ID\"}" \
+        "$VAULT_ADDR/v1/auth/approle/login" | jq -r .auth.client_token)"
 
-    - >
-      DOCKERHUB_USERNAME=$(curl -s -H "X-Vault-Token: $VAULT_TOKEN"
-      "$VAULT_ADDR/v1/kv/data/dockerhub" | jq -r .data.data.username)
+    - |
+      DOCKERHUB_USERNAME="$(curl -s -H "X-Vault-Token: $VAULT_TOKEN" \
+        "$VAULT_ADDR/v1/kv/data/dockerhub" | jq -r .data.data.username)"
 
-    - >
-      DOCKERHUB_TOKEN=$(curl -s -H "X-Vault-Token: $VAULT_TOKEN"
-      "$VAULT_ADDR/v1/kv/data/dockerhub" | jq -r .data.data.token)
+    - |
+      DOCKERHUB_TOKEN="$(curl -s -H "X-Vault-Token: $VAULT_TOKEN" \
+        "$VAULT_ADDR/v1/kv/data/dockerhub" | jq -r .data.data.token)"
 
     - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
 
