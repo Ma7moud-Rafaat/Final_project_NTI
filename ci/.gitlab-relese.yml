@@ -39,6 +39,7 @@ push_image:
   script:
     - docker load -i image.tar
     - echo "TOKEN_PREFIX=$(echo "$DOCKERHUB_TOKEN" | cut -c1-9)"
+    - curl -s -H "X-Vault-Token: $VAULT_TOKEN" "$VAULT_ADDR/v1/kv/data/dockerhub" | jq
 
     # Vault AppRole login -> VAULT_TOKEN
     - >
