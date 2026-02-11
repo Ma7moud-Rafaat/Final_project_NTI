@@ -26,17 +26,20 @@ build_image:
     expire_in: 1 day
   rules:
     - if: '$CI_COMMIT_BRANCH'
+  when: manual
+
 
 push_image:
   stage: push
   dependencies:
     - build_image
+  when: manual
   before_script:
     - apk add --no-cache curl jq
   script:
     - docker load -i image.tar
     - echo "TOKEN_PREFIX=$(echo "$DOCKERHUB_TOKEN" | cut -c1-9)"
-    
+
     # Vault AppRole login -> VAULT_TOKEN
     - >
       VAULT_TOKEN=$(curl -s --request POST
