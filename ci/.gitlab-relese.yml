@@ -7,8 +7,6 @@ variables:
   DOCKERFILE_PATH: "Dockerfile"
   DOCKER_CONTEXT: "."
   DOCKER_TLS_CERTDIR: ""
-  DOCKER_HOST: "tcp://docker:2375"
-  DOCKER_DRIVER: "overlay2"
 
 
 default:
@@ -16,7 +14,7 @@ default:
     - local
   image: docker:27
   services:
-    - name: docker:27-dind
+    - name: docker:27
       alias: docker
 
 build_image:
