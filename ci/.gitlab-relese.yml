@@ -1,36 +1,55 @@
-stages: [build_push]
+stages:
+  - build
+  - push
 
 variables:
   IMAGE_NAME: "ourwebsite"
   DOCKERFILE_PATH: "Dockerfile"
   DOCKER_CONTEXT: "."
-  DOCKER_HOST: "unix:///var/run/docker.sock"
   DOCKER_TLS_CERTDIR: ""
 
 default:
-  tags: [local]
+  tags:
+    - local
   image: docker:27
+  services:
+    - name: docker:27-dind
 
-build_push_image:
-  stage: build_push
+build_image:
+  stage: build
+  script:
+    - docker build -f "$DOCKERFILE_PATH" -t "$IMAGE_NAME:$CI_COMMIT_SHORT_SHA" "$DOCKER_CONTEXT"
+    - docker save "$IMAGE_NAME:$CI_COMMIT_SHORT_SHA" -o image.tar
+  artifacts:
+    paths:
+      - image.tar
+    expire_in: 1 day
+  rules:
+    - if: '$CI_COMMIT_BRANCH'
+
+push_image:
+  stage: push
+  dependencies:
+    - build_image
   before_script:
     - apk add --no-cache curl jq
   script:
-    - docker info
-    - docker build -f "$DOCKERFILE_PATH" -t "$IMAGE_NAME:$CI_COMMIT_SHORT_SHA" "$DOCKER_CONTEXT"
+    - docker load -i image.tar
 
-    - |
-      VAULT_TOKEN="$(curl -s --request POST \
-      --data "{\"role_id\":\"$VAULT_ROLE_ID\",\"secret_id\":\"$VAULT_SECRET_ID\"}" \
-      "$VAULT_ADDR/v1/auth/approle/login" | jq -r .auth.client_token)"
+    # Vault AppRole login -> VAULT_TOKEN
+    - >
+      VAULT_TOKEN=$(curl -s --request POST
+      --data "{\"role_id\":\"$VAULT_ROLE_ID\",\"secret_id\":\"$VAULT_SECRET_ID\"}"
+      "$VAULT_ADDR/v1/auth/approle/login" | jq -r .auth.client_token)
 
-    - |
-      DOCKERHUB_USERNAME="$(curl -s -H "X-Vault-Token: $VAULT_TOKEN" \
-      "$VAULT_ADDR/v1/kv/data/dockerhub" | jq -r .data.data.username)"
+    # Read dockerhub creds from KV (mount=kv)
+    - >
+      DOCKERHUB_USERNAME=$(curl -s -H "X-Vault-Token: $VAULT_TOKEN"
+      "$VAULT_ADDR/v1/kv/data/dockerhub" | jq -r .data.data.username)
 
-    - |
-      DOCKERHUB_TOKEN="$(curl -s -H "X-Vault-Token: $VAULT_TOKEN" \
-      "$VAULT_ADDR/v1/kv/data/dockerhub" | jq -r .data.data.token)"
+    - >
+      DOCKERHUB_TOKEN=$(curl -s -H "X-Vault-Token: $VAULT_TOKEN"
+      "$VAULT_ADDR/v1/kv/data/dockerhub" | jq -r .data.data.token)
 
     - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
 
@@ -43,3 +62,5 @@ build_push_image:
         docker tag "$IMAGE_NAME:$CI_COMMIT_SHORT_SHA" "$FULL_IMAGE:latest"
         docker push "$FULL_IMAGE:latest"
       fi
+  rules:
+    - if: '$CI_COMMIT_BRANCH'
