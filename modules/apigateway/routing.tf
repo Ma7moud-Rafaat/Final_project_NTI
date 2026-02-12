@@ -56,6 +56,24 @@ resource "aws_apigatewayv2_integration" "nexus" {
   }
 
 }
+resource "aws_apigatewayv2_integration" "nlp" {
+  api_id = aws_apigatewayv2_api.NTI_API.id
+
+  integration_type   = "HTTP_PROXY"
+  integration_method = "ANY"
+
+  connection_type = "VPC_LINK"
+  connection_id   = aws_apigatewayv2_vpc_link.VPC_LINK.id
+
+  integration_uri        = var.nlb_listener_arn
+  payload_format_version = "1.0"
+  timeout_milliseconds   = 29000
+
+  request_parameters = {
+    "overwrite:header.Host" = "nlp.${var.domain_base}"
+  }
+}
+
 
 # Routes (paths)
 
@@ -77,49 +95,15 @@ resource "aws_apigatewayv2_route" "argocd_root" {
   target    = "integrations/${aws_apigatewayv2_integration.argocd.id}"
 }
 resource "aws_apigatewayv2_route" "nlp" {
-  api_id    = aws_apigatewayv2_api.http_api.id
+  api_id    = aws_apigatewayv2_api.NTI_API.id
   route_key = "ANY /nlp/{proxy+}"
-  target    = "integrations/${aws_apigatewayv2_integration.vpclink.id}"
+  target    = "integrations/${aws_apigatewayv2_integration.nlp.id}"
 }
-
-# ArgoCD static + api + auth
-
-# resource "aws_apigatewayv2_route" "argocd_assets_proxy" {
-#   api_id    = aws_apigatewayv2_api.NTI_API.id
-#   route_key = "ANY /assets/{proxy+}"
-#   target    = "integrations/${aws_apigatewayv2_integration.argocd.id}"
-# }
-
-# resource "aws_apigatewayv2_route" "argocd_api_proxy" {
-#   api_id    = aws_apigatewayv2_api.NTI_API.id
-#   route_key = "ANY /api/{proxy+}"
-#   target    = "integrations/${aws_apigatewayv2_integration.argocd.id}"
-# }
-
-# resource "aws_apigatewayv2_route" "argocd_auth_proxy" {
-#   api_id    = aws_apigatewayv2_api.NTI_API.id
-#   route_key = "ANY /auth/{proxy+}"
-#   target    = "integrations/${aws_apigatewayv2_integration.argocd.id}"
-# }
-# # ArgoCD root paths (بدون proxy)
-
-# resource "aws_apigatewayv2_route" "argocd_api_root" {
-#   api_id    = aws_apigatewayv2_api.NTI_API.id
-#   route_key = "ANY /api"
-#   target    = "integrations/${aws_apigatewayv2_integration.argocd.id}"
-# }
-
-# resource "aws_apigatewayv2_route" "argocd_auth_root" {
-#   api_id    = aws_apigatewayv2_api.NTI_API.id
-#   route_key = "ANY /auth"
-#   target    = "integrations/${aws_apigatewayv2_integration.argocd.id}"
-# }
-
-# resource "aws_apigatewayv2_route" "argocd_assets_root" {
-#   api_id    = aws_apigatewayv2_api.NTI_API.id
-#   route_key = "ANY /assets"
-#   target    = "integrations/${aws_apigatewayv2_integration.argocd.id}"
-# }
+resource "aws_apigatewayv2_route" "nlp_root" {
+  api_id    = aws_apigatewayv2_api.NTI_API.id
+  route_key = "ANY /nlp"
+  target    = "integrations/${aws_apigatewayv2_integration.nlp.id}"
+}
 
 
 resource "aws_apigatewayv2_route" "vault_root" {
