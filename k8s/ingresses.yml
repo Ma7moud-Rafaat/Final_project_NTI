@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nlp-web-ing
+  namespace: nlp
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: nlp.internal.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nlp-web-svc
+            port:
+              number: 80

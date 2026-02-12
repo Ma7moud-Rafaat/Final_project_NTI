@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: nlp-web
-          image: ma7moudrafaat/hrappdotnet:V1.0.0
+          image: ma7moudrafaat/ourwebsite:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
