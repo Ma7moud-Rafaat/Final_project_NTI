@@ -4,9 +4,10 @@ metadata:
   name: nlp-web-svc
   namespace: nlp
 spec:
-  type: ClusterIP
   selector:
     app: nlp-web
   ports:
-    - port: 80
+    - name: http
+      port: 80
       targetPort: 8080
+  type: ClusterIP
