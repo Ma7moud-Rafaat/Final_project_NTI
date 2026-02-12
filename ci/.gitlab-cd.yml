@@ -15,9 +15,7 @@ cd_update_manifest:
     - git config --global user.name "gitlab-ci"
 
   script:
-    # -------------------------
-    # Vault Login (AppRole)
-    # -------------------------
+    # 1) Vault AppRole login -> VAULT_TOKEN
     - |
       LOGIN_JSON="$(curl -sS --fail --request POST \
         --data "{\"role_id\":\"$VAULT_ROLE_ID\",\"secret_id\":\"$VAULT_SECRET_ID\"}" \
@@ -26,9 +24,7 @@ cd_update_manifest:
       VAULT_TOKEN="$(echo "$LOGIN_JSON" | jq -r .auth.client_token)"
       test -n "$VAULT_TOKEN" && [ "$VAULT_TOKEN" != "null" ]
 
-    # -------------------------
-    # Read GitLab Token from Vault KV v2
-    # -------------------------
+    # 2) Read GitLab token from Vault KV v2
     - |
       GITLAB_JSON="$(curl -sS --fail \
         -H "X-Vault-Token: $VAULT_TOKEN" \
@@ -37,23 +33,18 @@ cd_update_manifest:
       GITLAB_TOKEN="$(echo "$GITLAB_JSON" | jq -r .data.data.token)"
       test -n "$GITLAB_TOKEN" && [ "$GITLAB_TOKEN" != "null" ]
 
-    # -------------------------
-    # Update manifest
-    # -------------------------
-    - TAG="${IMAGE_TAG:-$CI_COMMIT_SHORT_SHA}"
-    - echo "Deploying ${IMAGE_REPO}:${TAG}"
+    # 3) Update manifest image tag
+    - |
+      TAG="${IMAGE_TAG:-$CI_COMMIT_SHORT_SHA}"
+      echo "Deploying ${IMAGE_REPO}:${TAG}"
 
-    - yq -i '.spec.template.spec.containers[0].image = strenv(IMAGE_REPO) + ":" + strenv(TAG)' "$DEPLOY_FILE"
+      yq -i '.spec.template.spec.containers[0].image = strenv(IMAGE_REPO) + ":" + strenv(TAG)' "$DEPLOY_FILE"
 
-    # -------------------------
-    # Commit + Push
-    # -------------------------
-    - git add "$DEPLOY_FILE"
-    - git commit -m "cd: deploy ${IMAGE_REPO}:${TAG} [skip ci]" || echo "No changes"
+      git add "$DEPLOY_FILE"
+      git commit -m "cd: deploy ${IMAGE_REPO}:${TAG} [skip ci]" || echo "No changes"
 
-    - git push "https://oauth2:${GITLAB_TOKEN}@gitlab.com/${CI_PROJECT_PATH}.git" HEAD:main
+      git push "https://oauth2:${GITLAB_TOKEN}@gitlab.com/${CI_PROJECT_PATH}.git" HEAD:main
 
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       when: manual
-  
