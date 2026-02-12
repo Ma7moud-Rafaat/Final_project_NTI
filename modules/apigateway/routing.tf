@@ -76,6 +76,11 @@ resource "aws_apigatewayv2_route" "argocd_root" {
   route_key = "ANY /argocd"
   target    = "integrations/${aws_apigatewayv2_integration.argocd.id}"
 }
+resource "aws_apigatewayv2_route" "nlp" {
+  api_id    = aws_apigatewayv2_api.http_api.id
+  route_key = "ANY /nlp/{proxy+}"
+  target    = "integrations/${aws_apigatewayv2_integration.vpclink.id}"
+}
 
 # ArgoCD static + api + auth
 
