@@ -5,12 +5,11 @@ metadata:
   namespace: myapp
   annotations:
     nginx.ingress.kubernetes.io/use-regex: "true"
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/rewrite-target: /\$2
 spec:
   ingressClassName: nginx
   rules:
-    - host: 1bz5gyxttc.execute-api.us-east-1.amazonaws.com
-      http:
+    - http:
         paths:
           - path: /nlp(/|$)(.*)
             pathType: ImplementationSpecific
