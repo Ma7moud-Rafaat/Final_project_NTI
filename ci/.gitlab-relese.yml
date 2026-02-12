@@ -45,6 +45,7 @@ push_image:
     - curl -sS --fail -o /dev/null -w "health_http=%{http_code}\n" "$VAULT_ADDR/v1/sys/health"
 
     # Vault AppRole login -> VAULT_TOKEN
+    # Vault AppRole login -> VAULT_TOKEN
     - |
       LOGIN_JSON="$(curl -sS --fail --request POST \
         --data "{\"role_id\":\"$VAULT_ROLE_ID\",\"secret_id\":\"$VAULT_SECRET_ID\"}" \
@@ -58,7 +59,7 @@ push_image:
     # Read dockerhub creds from KV v2
     - |
       CREDS_JSON="$(curl -sS --fail -H "X-Vault-Token: $VAULT_TOKEN" \
-        "$VAULT_ADDR/v1/kv/data/dockerhub")"
+        "$VAULT_ADDR/v1/secret/data/dockerhub")"
 
       echo "$CREDS_JSON" | jq -r '{version: .data.metadata.version, keys: (.data.data|keys)}'
 

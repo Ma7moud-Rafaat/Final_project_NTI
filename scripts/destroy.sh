@@ -19,4 +19,4 @@ helm -n kube-system uninstall aws-load-balancer-controller || true
 
 log "Delete TargetGroupBinding + namespaces"
 kubectl -n "$INGRESS_NS" delete targetgroupbinding ingress-nginx-tgb --ignore-not-found=true || true
-kubectl delete ns argocd vault nexus "$INGRESS_NS" --ignore-not-found=true || true
+# kubectl delete ns argocd vault nexus "$INGRESS_NS" --ignore-not-found=true || true
