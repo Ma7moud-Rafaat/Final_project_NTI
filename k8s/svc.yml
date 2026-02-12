@@ -1,8 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: nlp-web-svc
-  namespace: nlp
+  name: nlp-web
 spec:
   selector:
     app: nlp-web
